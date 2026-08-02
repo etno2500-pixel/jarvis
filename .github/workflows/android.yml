@@ -22,10 +22,12 @@ jobs:
           cache: 'gradle'
 
       - name: Erteile die Ausführungsberechtigung für gradlew
+      
         run: chmod +x gradlew
         working-directory: Android
 
       - name: Mit Gradle erstellen
+      
         run: ./gradlew build
         working-directory: Android
 
