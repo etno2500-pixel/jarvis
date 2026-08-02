@@ -1,36 +1,44 @@
-name: Android CI
+name: JARVIS APK erstellen
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "hauptsächlich" ]
-  pull_request:
-    branches: [ "hauptsächlich" ]
+    branches:
+      - main
 
 jobs:
   bauen:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Repository laden
+        uses: actions/checkout@v4
 
-    - name: JDK 17 einrichten
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
 
-    - name: Gradle einrichten
-      uses: gradle/actions/setup-gradle@v4
+      - name: Android SDK einrichten
+        uses: android-actions/setup-android@v3
 
-    - name: Mit Gradle erstellen
-      run: gradle assembleDebug --stacktrace
-      
+      - name: Android SDK installieren
+        run: |
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
 
-    - name: APK-Artefakt hochladen
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: 
-        path: app/build/outputs/apk/debug/*.apk
+      - name: Gradle einrichten
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: JARVIS bauen
+        run: gradle assembleDebug --stacktrace
+
+      - name: APK hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
