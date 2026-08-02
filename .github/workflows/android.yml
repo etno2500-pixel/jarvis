@@ -32,5 +32,5 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug-apk
-        path: Jarvis/**/build/outputs/apk/debug/*.apk
+        name: 
+        path: app/build/outputs/apk/debug/*.apk
