@@ -20,17 +20,28 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    # Sucht die gradlew-Datei und macht sie ausführbar
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: |
+        GRADLEW_PATH=$(find . -name gradlew -print -quit)
+        if [ -z "$GRADLEW_PATH" ]; then echo "FEHLER: gradlew wurde nirgends gefunden!"; exit 1; fi
+        chmod +x "$GRADLEW_PATH"
+        echo "GRADLEW_DIR=$(dirname "$GRADLEW_PATH")" >> $GITHUB_ENV
 
+    # Startet die Unit-Tests im richtigen Ordner
     - name: Run Unit Tests
       run: ./gradlew testDebugUnitTest
+      working-directory: ${{ env.GRADLEW_DIR }}
 
+    # Baut die App im richtigen Ordner
     - name: Build with Gradle
       run: ./gradlew assembleDebug
+      working-directory: ${{ env.GRADLEW_DIR }}
 
+    # Lädt die APK hoch (sucht automatisch nach der Datei im build-Ordner)
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: |
+          **/build/outputs/apk/debug/*.apk
