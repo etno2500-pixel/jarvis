@@ -13,7 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    # Auf Java 17 aktualisiert (Standard für neuere Android-Projekte)
     - name: set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -21,17 +20,21 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: |
-        GRADLEW_PATH=$(find . -name gradlew -print -quit)
-        if [ -z "$GRADLEW_PATH" ]; then echo "FEHLER: gradlew wurde nirgends gefunden!"; exit 1; fi
-        chmod +x "$GRADLEW_PATH"
-        echo "GRADLEW_DIR=$(dirname "$GRADLEW_PATH")" >> $GITHUB_ENV
+    # Installiert Gradle direkt auf dem GitHub-Server, da es im Projekt fehlt
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
 
-    # Unit Tests temporär übersprungen, um zu sehen, ob die App überhaupt baut
+    # Sucht nach der build.gradle-Datei, um den richtigen Projektordner zu finden
+    - name: Find Project Directory
+      run: |
+        BUILD_FILE=$(find . -name "build.gradle*" -print -quit)
+        if [ -z "$BUILD_FILE" ]; then echo "FEHLER: Keine build.gradle gefunden. Ist das ein Android-Projekt?"; exit 1; fi
+        echo "PROJECT_DIR=$(dirname "$BUILD_FILE")" >> $GITHUB_ENV
+
+    # Baut die App mit dem installierten Gradle-System
     - name: Build with Gradle
-      run: ./gradlew assembleDebug --stacktrace
-      working-directory: ${{ env.GRADLEW_DIR }}
+      run: gradle assembleDebug --stacktrace
+      working-directory: ${{ env.PROJECT_DIR }}
 
     - name: Upload APK Artifact
       if: success()
@@ -40,4 +43,5 @@ jobs:
         name: app-debug-apk
         path: |
           **/build/outputs/apk/debug/*.apk
+
 
