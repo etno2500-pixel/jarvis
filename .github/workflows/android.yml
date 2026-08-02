@@ -2,46 +2,35 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "hauptsächlich" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "hauptsächlich" ]
 
 jobs:
-  build:
+  bauen:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: set up JDK 17
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: JDK 17 einrichten
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
 
-    # Installiert Gradle direkt auf dem GitHub-Server, da es im Projekt fehlt
-    - name: Setup Gradle
+    - name: Gradle einrichten
       uses: gradle/actions/setup-gradle@v4
 
-    # Sucht nach der build.gradle-Datei, um den richtigen Projektordner zu finden
-    - name: Find Project Directory
-      run: |
-        BUILD_FILE=$(find . -name "build.gradle*" -print -quit)
-        if [ -z "$BUILD_FILE" ]; then echo "FEHLER: Keine build.gradle gefunden. Ist das ein Android-Projekt?"; exit 1; fi
-        echo "PROJECT_DIR=$(dirname "$BUILD_FILE")" >> $GITHUB_ENV
-
-    # Baut die App mit dem installierten Gradle-System
-    - name: Build with Gradle
+    - name: Mit Gradle erstellen
       run: gradle assembleDebug --stacktrace
-      working-directory: ${{ env.PROJECT_DIR }}
+      working-directory: ./Jarvis
 
-    - name: Upload APK Artifact
+    - name: APK-Artefakt hochladen
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
-        path: |
-          **/build/outputs/apk/debug/*.apk
-
-
+        path: Jarvis/**/build/outputs/apk/debug/*.apk
