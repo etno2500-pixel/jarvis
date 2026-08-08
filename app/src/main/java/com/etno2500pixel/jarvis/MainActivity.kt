@@ -9,10 +9,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -62,7 +63,6 @@ class MainActivity : ComponentActivity() {
         ).build()
 
         voice = VoiceManager(this)
-
         tools = AndroidTools(this)
 
         agent = JarvisAgent(
@@ -72,10 +72,10 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-
             JarvisApp(
-                onSend = ::handle,
-
+                onSend = { text, onResult ->
+                    handle(text, onResult)
+                },
                 onSpeak = {
                     requestPermissions(
                         arrayOf(Manifest.permission.RECORD_AUDIO),
@@ -90,45 +90,55 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun handle(text: String) {
-
+    private fun handle(
+        text: String,
+        onResult: (String) -> Unit = {}
+    ) {
         MainScope().launch {
 
-            if (!tools.executeSafeCommand(text)) {
+            val response =
+                if (!tools.executeSafeCommand(text)) {
+                    agent.respond(text)
+                } else {
+                    "Erledigt."
+                }
 
-                val response = agent.respond(text)
-
-                voice.speak(response)
-
-            } else {
-
-                voice.speak("Erledigt.")
-            }
+            onResult(response)
+            voice.speak(response)
         }
     }
 
     override fun onDestroy() {
-
         voice.release()
-
         super.onDestroy()
     }
 }
 
 @Composable
 private fun JarvisApp(
-    onSend: (String) -> Unit,
+    onSend: (String, (String) -> Unit) -> Unit,
     onSpeak: () -> Unit
 ) {
-
     var input by remember {
         mutableStateOf("")
+    }
+
+    var processing by remember {
+        mutableStateOf(false)
     }
 
     val messages = remember {
         mutableStateListOf(
             "JARVIS: System online. Lernkern aktiv."
         )
+    }
+
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.lastIndex)
+        }
     }
 
     MaterialTheme(
@@ -138,16 +148,13 @@ private fun JarvisApp(
             primary = Color(0xFF5AD9FF)
         )
     ) {
-
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(18.dp),
-
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -162,7 +169,10 @@ private fun JarvisApp(
                 )
 
                 Text(
-                    text = "LEARNING AGENT",
+                    text = if (processing)
+                        "THINKING..."
+                    else
+                        "LEARNING AGENT",
                     fontSize = 11.sp,
                     color = Color(0xFF66DFFF)
                 )
@@ -176,10 +186,8 @@ private fun JarvisApp(
                         .size(150.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF0B2430)),
-
                     contentAlignment = Alignment.Center
                 ) {
-
                     Text(
                         text = "J",
                         fontSize = 70.sp,
@@ -193,22 +201,52 @@ private fun JarvisApp(
                 )
 
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-
                     contentPadding = PaddingValues(
                         vertical = 8.dp
                     )
                 ) {
-
                     items(messages) { message ->
 
-                        Text(
-                            text = message,
-                            modifier = Modifier.padding(8.dp),
-                            color = Color(0xFFE4F7FF)
-                        )
+                        val isUser =
+                            message.startsWith("DU:")
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    vertical = 4.dp,
+                                    horizontal = 4.dp
+                                ),
+                            colors = CardDefaults.cardColors(
+                                containerColor =
+                                    if (isUser)
+                                        Color(0xFF102A38)
+                                    else
+                                        Color(0xFF0B151D)
+                            )
+                        ) {
+                            Text(
+                                text = message,
+                                modifier = Modifier.padding(12.dp),
+                                color = Color(0xFFE4F7FF),
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+
+                    if (processing) {
+                        item {
+                            Text(
+                                text = "JARVIS verarbeitet …",
+                                modifier = Modifier.padding(12.dp),
+                                color = Color(0xFF66DFFF),
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
 
@@ -222,17 +260,15 @@ private fun JarvisApp(
                         onValueChange = {
                             input = it
                         },
-
                         modifier = Modifier.weight(1f),
-
                         placeholder = {
                             Text("Sag etwas zu JARVIS …")
                         },
-
                         singleLine = true
                     )
 
                     IconButton(
+                        enabled = !processing,
                         onClick = {
 
                             if (input.isNotBlank()) {
@@ -243,23 +279,30 @@ private fun JarvisApp(
                                     "DU: $text"
                                 )
 
-                                onSend(text)
-
                                 input = ""
+                                processing = true
+
+                                onSend(text) { response ->
+
+                                    messages.add(
+                                        "JARVIS: $response"
+                                    )
+
+                                    processing = false
+                                }
                             }
                         }
                     ) {
-
                         Icon(
-                            Icons.Default.Send,
+                            Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Senden"
                         )
                     }
 
                     IconButton(
+                        enabled = !processing,
                         onClick = onSpeak
                     ) {
-
                         Icon(
                             Icons.Default.Mic,
                             contentDescription = "Sprechen"
