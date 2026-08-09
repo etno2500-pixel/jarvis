@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,9 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.room.Room
+import com.etno2500pixel.jarvis.ai.RemoteAIProvider
 import com.etno2500pixel.jarvis.core.JarvisAgent
 import com.etno2500pixel.jarvis.core.LearningEngine
 import com.etno2500pixel.jarvis.data.JarvisDatabase
@@ -46,6 +49,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var voice: VoiceManager
     private lateinit var agent: JarvisAgent
     private lateinit var tools: AndroidTools
+    private val prefs by lazy { getSharedPreferences("jarvis_settings", MODE_PRIVATE) }
 
     private val speech = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val text = result.data?.getStringArrayListExtra("android.speech.extra.RESULTS")?.firstOrNull()
@@ -57,9 +61,16 @@ class MainActivity : ComponentActivity() {
         val db = Room.databaseBuilder(applicationContext, JarvisDatabase::class.java, "jarvis.db").build()
         voice = VoiceManager(this)
         tools = AndroidTools(this)
-        agent = JarvisAgent(db.memoryDao(), db.conversationDao(), LearningEngine(db.memoryDao()))
+        agent = JarvisAgent(
+            db.memoryDao(),
+            db.conversationDao(),
+            LearningEngine(db.memoryDao()),
+            RemoteAIProvider { prefs.getString("openai_api_key", "").orEmpty() }
+        )
         setContent {
             JarvisApp(
+                savedApiKey = prefs.getString("openai_api_key", "").orEmpty(),
+                onSaveApiKey = { key -> prefs.edit().putString("openai_api_key", key.trim()).apply() },
                 onSend = { text, onResult -> handle(text, onResult) },
                 onSpeak = {
                     requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 10)
@@ -84,9 +95,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun JarvisApp(onSend: (String, (String) -> Unit) -> Unit, onSpeak: () -> Unit) {
+private fun JarvisApp(
+    savedApiKey: String,
+    onSaveApiKey: (String) -> Unit,
+    onSend: (String, (String) -> Unit) -> Unit,
+    onSpeak: () -> Unit
+) {
     var input by remember { mutableStateOf("") }
     var processing by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf("JARVIS: System online. Lernkern aktiv.") }
     val listState = rememberLazyListState()
 
@@ -122,22 +139,34 @@ private fun JarvisApp(onSend: (String, (String) -> Unit) -> Unit, onSpeak: () ->
                         Text("J.A.R.V.I.S.", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE8FAFF))
                         Text(if (processing) "PROCESSING REQUEST" else "SYSTEM ONLINE", fontSize = 10.sp, letterSpacing = 1.6.sp, color = Color(0xFF59DFFF))
                     }
-                    IconButton(onClick = {}) { Icon(Icons.Default.Settings, "Einstellungen", tint = Color(0xFF8BAFBD)) }
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(Icons.Default.Settings, "KI-Einstellungen", tint = Color(0xFF8BAFBD))
+                    }
                 }
 
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     StatusChip("CORE", "ONLINE", Modifier.weight(1f))
                     StatusChip("MEMORY", "ACTIVE", Modifier.weight(1f))
-                    StatusChip("VOICE", "READY", Modifier.weight(1f))
+                    StatusChip("AI", if (savedApiKey.isBlank()) "SETUP" else "ONLINE", Modifier.weight(1f))
                 }
 
                 Spacer(Modifier.height(18.dp))
                 Box(Modifier.fillMaxWidth().height(210.dp), contentAlignment = Alignment.Center) {
                     Box(Modifier.size(172.dp).graphicsLayer { rotationZ = rotation }.border(1.dp, Color(0xFF236D82), CircleShape))
-                    Box(Modifier.size(142.dp).graphicsLayer { scaleX = pulse; scaleY = pulse }.clip(CircleShape).background(Color(0xFF08232E)).border(2.dp, Color(0xFF59DFFF), CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Public,
+                        contentDescription = "Rotierende Erde",
+                        modifier = Modifier.size(112.dp).graphicsLayer { rotationY = rotation },
+                        tint = Color(0xFF59DFFF)
+                    )
+                    Box(
+                        Modifier.size(142.dp).graphicsLayer { scaleX = pulse; scaleY = pulse }
+                            .border(2.dp, Color(0xFF59DFFF), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("J", fontSize = 62.sp, fontWeight = FontWeight.Bold, color = Color(0xFF59DFFF))
+                            Text("J", fontSize = 52.sp, fontWeight = FontWeight.Bold, color = Color(0xFF59DFFF))
                             Text(if (processing) "THINKING" else "READY", fontSize = 9.sp, letterSpacing = 1.4.sp, color = Color(0xFF9BEAFF))
                         }
                     }
@@ -177,6 +206,32 @@ private fun JarvisApp(onSend: (String, (String) -> Unit) -> Unit, onSpeak: () ->
                 }
             }
         }
+    }
+
+    if (showSettings) {
+        var key by remember(savedApiKey) { mutableStateOf(savedApiKey) }
+        AlertDialog(
+            onDismissRequest = { showSettings = false },
+            title = { Text("JARVIS KI") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("OpenAI API-Key für die externe KI")
+                    OutlinedTextField(
+                        value = key,
+                        onValueChange = { key = it },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        placeholder = { Text("sk-…") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onSaveApiKey(key); showSettings = false }) { Text("Speichern") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSettings = false }) { Text("Abbrechen") }
+            }
+        )
     }
 }
 
