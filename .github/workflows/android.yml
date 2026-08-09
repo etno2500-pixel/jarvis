@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - Jarvis
+  pull_request:
+    branches:
+      - Jarvis
 
 permissions:
   contents: read
