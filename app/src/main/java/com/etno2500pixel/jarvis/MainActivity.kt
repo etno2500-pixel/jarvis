@@ -5,6 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -90,17 +95,16 @@ private fun JarvisApp(onSend: (String, (String) -> Unit) -> Unit, onSpeak: () ->
 
     val transition = rememberInfiniteTransition(label = "jarvis_core")
     val rotation by transition.animateFloat(
-        0f, 360f,
-        androidx.compose.animation.core.infiniteRepeatable(
-            androidx.compose.animation.core.tween(9000, easing = androidx.compose.animation.core.LinearEasing)
-        ), label = "rotation"
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(9000, easing = LinearEasing)),
+        label = "rotation"
     )
     val pulse by transition.animateFloat(
-        0.88f, 1.08f,
-        androidx.compose.animation.core.infiniteRepeatable(
-            androidx.compose.animation.core.tween(1800),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
-        ), label = "pulse"
+        initialValue = 0.88f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(tween(1800), repeatMode = RepeatMode.Reverse),
+        label = "pulse"
     )
 
     MaterialTheme(colorScheme = darkColorScheme(
