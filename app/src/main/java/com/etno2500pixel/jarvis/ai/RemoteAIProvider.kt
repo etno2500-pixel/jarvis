@@ -2,19 +2,15 @@ package com.etno2500pixel.jarvis.ai
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 class RemoteAIProvider(
     private val apiKeyProvider: () -> String,
     private val model: String = "gpt-5-mini"
 ) : AIProvider {
-    private val client = OkHttpClient()
-
     override suspend fun ask(prompt: String): String = withContext(Dispatchers.IO) {
         val apiKey = apiKeyProvider().trim()
         if (apiKey.isBlank()) {
@@ -33,22 +29,31 @@ class RemoteAIProvider(
                     ))
             ))
 
-        val request = Request.Builder()
-            .url("https://api.openai.com/v1/responses")
-            .header("Authorization", "Bearer $apiKey")
-            .header("Content-Type", "application/json")
-            .post(body.toString().toRequestBody("application/json".toMediaType()))
-            .build()
-
         try {
-            client.newCall(request).execute().use { response ->
-                val result = response.body?.string().orEmpty()
-                if (!response.isSuccessful) {
-                    return@withContext "JARVIS: KI-Fehler (${response.code})."
-                }
-                JSONObject(result).optString("output_text").ifBlank {
-                    "JARVIS: Die KI hat keine Antwort geliefert."
-                }
+            val connection = (URL("https://api.openai.com/v1/responses").openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = 15_000
+                readTimeout = 30_000
+                doOutput = true
+                setRequestProperty("Authorization", "Bearer $apiKey")
+                setRequestProperty("Content-Type", "application/json")
+            }
+
+            connection.outputStream.use { output ->
+                output.write(body.toString().toByteArray(Charsets.UTF_8))
+            }
+
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val result = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            connection.disconnect()
+
+            if (status !in 200..299) {
+                return@withContext "JARVIS: KI-Fehler ($status)."
+            }
+
+            JSONObject(result).optString("output_text").ifBlank {
+                "JARVIS: Die KI hat keine Antwort geliefert."
             }
         } catch (_: Exception) {
             "JARVIS: Verbindung zur externen KI fehlgeschlagen."
