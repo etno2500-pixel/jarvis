@@ -5,6 +5,15 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val signingStoreFile = System.getenv("JARVIS_SIGNING_STORE_FILE")
+val signingStorePassword = System.getenv("JARVIS_SIGNING_STORE_PASSWORD")
+val signingKeyAlias = System.getenv("JARVIS_SIGNING_KEY_ALIAS")
+val signingKeyPassword = System.getenv("JARVIS_SIGNING_KEY_PASSWORD")
+val hasReleaseSigning = !signingStoreFile.isNullOrBlank() &&
+    !signingStorePassword.isNullOrBlank() &&
+    !signingKeyAlias.isNullOrBlank() &&
+    !signingKeyPassword.isNullOrBlank()
+
 android {
     namespace = "com.etno2500pixel.jarvis"
     compileSdk = 36
@@ -25,6 +34,22 @@ android {
     }
 
     kotlinOptions { jvmTarget = "17" }
+
+    if (hasReleaseSigning) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(signingStoreFile!!)
+                storePassword = signingStorePassword
+                keyAlias = signingKeyAlias
+                keyPassword = signingKeyPassword
+            }
+        }
+        buildTypes {
+            getByName("release") {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
 
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
