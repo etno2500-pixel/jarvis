@@ -35,9 +35,33 @@ jobs:
       - name: JARVIS bauen
         run: ./gradlew --no-daemon --stacktrace assembleDebug
 
-      - name: APK hochladen
+      - name: Feste Signierung vorbereiten
+        if: ${{ secrets.JARVIS_SIGNING_KEYSTORE_B64 != '' }}
+        env:
+          JARVIS_SIGNING_KEYSTORE_B64: ${{ secrets.JARVIS_SIGNING_KEYSTORE_B64 }}
+          JARVIS_SIGNING_STORE_PASSWORD: ${{ secrets.JARVIS_SIGNING_STORE_PASSWORD }}
+          JARVIS_SIGNING_KEY_ALIAS: ${{ secrets.JARVIS_SIGNING_KEY_ALIAS }}
+          JARVIS_SIGNING_KEY_PASSWORD: ${{ secrets.JARVIS_SIGNING_KEY_PASSWORD }}
+        run: |
+          echo "$JARVIS_SIGNING_KEYSTORE_B64" | base64 --decode > jarvis-release.jks
+          echo "JARVIS_SIGNING_STORE_FILE=$GITHUB_WORKSPACE/jarvis-release.jks" >> "$GITHUB_ENV"
+          echo "JARVIS_SIGNING_STORE_PASSWORD=$JARVIS_SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "JARVIS_SIGNING_KEY_ALIAS=$JARVIS_SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "JARVIS_SIGNING_KEY_PASSWORD=$JARVIS_SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Signierte Release-APK bauen
+        if: ${{ secrets.JARVIS_SIGNING_KEYSTORE_B64 != '' }}
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
+
+      - name: APKs hochladen
         uses: actions/upload-artifact@v4
         with:
-          name: jarvis-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: jarvis-apks-v${{ github.run_number }}
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Keystore sicher löschen
+        if: always()
+        run: rm -f jarvis-release.jks
