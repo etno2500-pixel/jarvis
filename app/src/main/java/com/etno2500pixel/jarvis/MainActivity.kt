@@ -23,7 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
@@ -75,8 +75,8 @@ private fun JarvisDashboard(onSend: (String, (String) -> Unit) -> Unit, onSpeak:
     val listState = rememberLazyListState()
     LaunchedEffect(messages.size) { if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex) }
     val transition = rememberInfiniteTransition(label = "earth")
-    val rotation by transition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(tween(18000, easing = LinearEasing)), label = "earthRotation")
-    val pulse by transition.animateFloat(initialValue = .92f, targetValue = 1.06f, animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse), label = "pulse")
+    val rotation by transition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(animation = tween(18000, easing = LinearEasing)), label = "earthRotation")
+    val pulse by transition.animateFloat(initialValue = .92f, targetValue = 1.06f, animationSpec = infiniteRepeatable(animation = tween(1400), repeatMode = RepeatMode.Reverse), label = "pulse")
 
     Box(Modifier.fillMaxSize().background(Bg)) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
@@ -103,7 +103,6 @@ private fun JarvisDashboard(onSend: (String, (String) -> Unit) -> Unit, onSpeak:
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) { Status("⌘", "NETZWERK", "STABIL", "PING 12ms"); Status("◎", "ÜBERWACHUNG", "AKTIV", "24/7"); Status("ϟ", "ENERGIE", "OPTIMAL", "100%"); Status("↻", "UPDATES", "AKTUELL", "KEINE UPDATES") }
             }
             Text("AKTIVITÄT", color = Cyan, fontSize = 10.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
-            Text("╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎╎", color = Cyan, modifier = Modifier.align(Alignment.CenterHorizontally))
             Spacer(Modifier.height(5.dp))
             HudPanel(Modifier.fillMaxWidth().height(82.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
