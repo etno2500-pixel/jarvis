@@ -2,6 +2,7 @@ package com.etno2500pixel.jarvis
 
 import android.Manifest
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        hideSystemNavigation()
         val db = Room.databaseBuilder(applicationContext, JarvisDatabase::class.java, "jarvis.db").build()
         voice = VoiceManager(this)
         tools = AndroidTools(this)
@@ -46,6 +48,23 @@ class MainActivity : ComponentActivity() {
                 }
             )
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemNavigation()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun hideSystemNavigation() {
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
     }
 
     private fun handle(text: String, onResult: (String) -> Unit = {}) = MainScope().launch {
