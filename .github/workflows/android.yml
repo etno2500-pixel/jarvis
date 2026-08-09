@@ -46,7 +46,7 @@ jobs:
 
       - name: Feste Signierung vorbereiten
         run: |
-          echo "$JARVIS_SIGNING_KEYSTORE_B64" | base64 --decode > jarvis-release.jks
+          printf '%s' "$JARVIS_SIGNING_KEYSTORE_B64" | tr -d '[:space:]' | base64 --decode > jarvis-release.jks
           echo "JARVIS_SIGNING_STORE_FILE=$GITHUB_WORKSPACE/jarvis-release.jks" >> "$GITHUB_ENV"
           echo "JARVIS_SIGNING_STORE_PASSWORD=$JARVIS_SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
           echo "JARVIS_SIGNING_KEY_ALIAS=$JARVIS_SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
