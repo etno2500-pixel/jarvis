@@ -57,6 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -67,6 +68,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlin.math.min
 
 private val HudBackground = Color(0xFF01060B)
@@ -206,6 +208,15 @@ private fun HudCard(title: String, value: String, icon: ImageVector, compact: Bo
 
 @Composable
 private fun HudGlobe(modifier: Modifier, globeSize: Dp, orbitSize: Dp) {
+    var rotation by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            rotation = (rotation + 0.6f) % 360f
+            delay(16L)
+        }
+    }
+
     Box(modifier.height(205.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(orbitSize)) {
             val center = Offset(size.width / 2f, size.height / 2f)
@@ -214,7 +225,7 @@ private fun HudGlobe(modifier: Modifier, globeSize: Dp, orbitSize: Dp) {
             drawOval(HudCyan.copy(alpha = 0.22f), topLeft = Offset(center.x - radius * 0.83f, center.y - radius * 0.23f), size = Size(radius * 1.66f, radius * 0.46f), style = Stroke(1f))
         }
         Box(Modifier.size(globeSize).border(2.dp, HudCyan.copy(alpha = 0.8f), CircleShape).background(Color(0xFF06131D), CircleShape), contentAlignment = Alignment.Center) {
-            Icon(Icons.Default.Public, "Erde", tint = HudCyan.copy(alpha = 0.92f), modifier = Modifier.size(globeSize * 0.72f))
+            Icon(Icons.Default.Public, "Erde", tint = HudCyan.copy(alpha = 0.92f), modifier = Modifier.size(globeSize * 0.72f).rotate(rotation))
         }
         Text("JARVIS", Modifier.align(Alignment.BottomCenter), color = HudCyan, fontSize = 9.sp, letterSpacing = 2.sp)
     }
