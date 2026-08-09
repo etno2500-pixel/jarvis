@@ -58,6 +58,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -95,18 +96,11 @@ fun JarvisHtmlApp(
 
     MaterialTheme(colorScheme = darkColorScheme(background = HtmlBg, surface = HtmlPanel, primary = HtmlCyan)) {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(HtmlBg)
-                .safeDrawingPadding(),
+            modifier = Modifier.fillMaxSize().background(HtmlBg).safeDrawingPadding(),
             color = HtmlBg
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .imePadding()
+                modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()
             ) {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 7.dp),
@@ -121,37 +115,21 @@ fun JarvisHtmlApp(
                     Text("JUST A RATHER VERY INTELLIGENT SYSTEM", color = HtmlDim, fontSize = 9.sp, letterSpacing = 1.sp)
                 }
 
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HtmlStatusCard("Kommunikation", "VERBUNDEN", "STABIL", Icons.Default.NetworkCheck, Modifier.weight(1f))
                     HtmlStatusCard("Netzwerk", "STABIL", "PING 12ms", Icons.Default.Public, Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HtmlStatusCard("Sicherheit", "GESCHÜTZT", "OPTIMAL", Icons.Default.Security, Modifier.weight(1f))
                     HtmlStatusCard("Energie", "OPTIMAL", "100%", Icons.Default.Bolt, Modifier.weight(1f))
                 }
 
                 Box(Modifier.fillMaxWidth().height(82.dp), contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Public,
-                        contentDescription = "Drehende Erde",
-                        modifier = Modifier.size(62.dp).graphicsLayer {
-                            rotationY = earthRotation
-                        },
-                        tint = HtmlCyan.copy(alpha = .85f)
-                    )
+                    Icon(Icons.Default.Public, contentDescription = "Drehende Erde", modifier = Modifier.size(62.dp).graphicsLayer { rotationY = earthRotation }, tint = HtmlCyan.copy(alpha = .85f))
                 }
 
-                Row(
-                    Modifier.fillMaxWidth().background(HtmlPanel).padding(horizontal = 15.dp, vertical = 9.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Row(Modifier.fillMaxWidth().background(HtmlPanel).padding(horizontal = 15.dp, vertical = 9.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text("DEIN STANDORT", color = HtmlDim, fontSize = 9.sp)
                         Text("MÜNCHEN, DEUTSCHLAND", color = HtmlWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -179,64 +157,37 @@ fun JarvisHtmlApp(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(if (user) HtmlCyan.copy(alpha = .15f) else Color(0xCC021C36))
                                 .border(1.dp, HtmlCyan.copy(alpha = .18f), RoundedCornerShape(12.dp))
-                                .padding(10.dp, 10.dp)
+                                .padding(10.dp)
                         ) {
                             Text(sender, color = HtmlCyan, fontSize = 9.sp, letterSpacing = 1.sp)
                             Text(body, color = HtmlWhite, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 3.dp))
-                            Text(time, color = HtmlDim, fontSize = 8.sp, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                            Text(time, color = HtmlDim, fontSize = 8.sp, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), textAlign = TextAlign.End)
                         }
                     }
                     if (processing) item { Text("JARVIS verarbeitet …", color = HtmlCyan, fontSize = 12.sp) }
                 }
 
-                Row(
-                    Modifier.fillMaxWidth().background(Color(0xE6010A15)).padding(horizontal = 15.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        Modifier.size(64.dp).clip(CircleShape).background(HtmlBg).border(2.dp, HtmlCyan, CircleShape).clickable(enabled = !processing) { onSpeak() },
-                        contentAlignment = Alignment.Center
-                    ) {
+                Row(Modifier.fillMaxWidth().background(Color(0xE6010A15)).padding(horizontal = 15.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.size(64.dp).clip(CircleShape).background(HtmlBg).border(2.dp, HtmlCyan, CircleShape).clickable(enabled = !processing) { onSpeak() }, contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.Mic, "Mikrofon", tint = HtmlCyan, modifier = Modifier.size(28.dp))
                     }
-                    OutlinedTextField(
-                        value = input,
-                        onValueChange = { input = it },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        placeholder = { Text("Nachricht …", color = HtmlDim) },
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                    IconButton(
-                        enabled = !processing && input.isNotBlank(),
-                        onClick = {
-                            val text = input.trim()
-                            input = ""
-                            messages.add("SIE|$text|23:47")
-                            processing = true
-                            onSend(text) { answer ->
-                                messages.add("JARVIS|$answer|23:47")
-                                processing = false
-                            }
+                    OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nachricht …", color = HtmlDim) }, shape = RoundedCornerShape(20.dp))
+                    IconButton(enabled = !processing && input.isNotBlank(), onClick = {
+                        val text = input.trim()
+                        input = ""
+                        messages.add("SIE|$text|23:47")
+                        processing = true
+                        onSend(text) { answer ->
+                            messages.add("JARVIS|$answer|23:47")
+                            processing = false
                         }
-                    ) {
-                        Icon(Icons.Default.Send, "Senden", tint = HtmlCyan)
-                    }
+                    }) { Icon(Icons.Default.Send, "Senden", tint = HtmlCyan) }
                 }
 
-                Row(
-                    Modifier.fillMaxWidth().background(Color(0xFF01060D)).padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
+                Row(Modifier.fillMaxWidth().background(Color(0xFF01060D)).padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                     listOf("CHAT", "SYSTEME", "AUFGABEN", "ERINNERUNGEN", "EINSTELLUNGEN").forEachIndexed { index, label ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 4.dp)) {
-                            Icon(
-                                if (index == 0) Icons.Default.Smartphone else Icons.Default.Public,
-                                contentDescription = label,
-                                tint = if (index == 0) HtmlCyan else HtmlDim,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Icon(if (index == 0) Icons.Default.Smartphone else Icons.Default.Public, contentDescription = label, tint = if (index == 0) HtmlCyan else HtmlDim, modifier = Modifier.size(20.dp))
                             Text(label, color = if (index == 0) HtmlCyan else HtmlDim, fontSize = 8.sp)
                         }
                     }
@@ -247,5 +198,30 @@ fun JarvisHtmlApp(
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    }
+}
+
+@Composable
+private fun HtmlStatusCard(
+    title: String,
+    value: String,
+    sub: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth().border(1.dp, HtmlCyan.copy(alpha = .25f), RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
+        color = HtmlPanel
+    ) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = HtmlCyan)
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = HtmlDim, fontSize = 8.sp)
+                Text(value, color = HtmlSuccess, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(sub, color = HtmlDim, fontSize = 8.sp)
+            }
+        }
     }
 }
