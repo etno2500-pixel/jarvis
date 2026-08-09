@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
             db.memoryDao(),
             db.conversationDao(),
             LearningEngine(db.memoryDao()),
-            RemoteAIProvider { prefs.getString("openai_api_key", "").orEmpty() }
+            RemoteAIProvider(apiKeyProvider = { prefs.getString("openai_api_key", "").orEmpty() })
         )
         setContent {
             JarvisTestApp(
