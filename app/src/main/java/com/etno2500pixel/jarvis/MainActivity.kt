@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            JarvisAppV2(
+            JarvisHtmlApp(
                 apiKey = prefs.getString("openai_api_key", "").orEmpty(),
                 saveKey = { key -> prefs.edit().putString("openai_api_key", key.trim()).apply() },
                 onSend = { text, result -> handle(text, result) },
