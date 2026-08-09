@@ -68,3 +68,5 @@ jobs:
       - name: Keystore sicher löschen
         if: always()
         run: rm -f jarvis-release.jks
+
+# Signierter Build-Trigger nach Hinterlegung der Repository-Secrets.
