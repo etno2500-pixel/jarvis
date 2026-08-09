@@ -75,8 +75,8 @@ private fun JarvisDashboard(onSend: (String, (String) -> Unit) -> Unit, onSpeak:
     val listState = rememberLazyListState()
     LaunchedEffect(messages.size) { if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex) }
     val transition = rememberInfiniteTransition(label = "earth")
-    val rotation by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(18000, easing = LinearEasing)), label = "earthRotation")
-    val pulse by transition.animateFloat(.92f, 1.06f, infiniteRepeatable(tween(1400), RepeatMode.Reverse), label = "pulse")
+    val rotation by transition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(tween(18000, easing = LinearEasing)), label = "earthRotation")
+    val pulse by transition.animateFloat(initialValue = .92f, targetValue = 1.06f, animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse), label = "pulse")
 
     Box(Modifier.fillMaxSize().background(Bg)) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
