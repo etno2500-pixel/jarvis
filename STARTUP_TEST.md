@@ -1,0 +1,1 @@
+Clean startup test branch based exactly on #102 (f9a09f1). No source differences from #102.
