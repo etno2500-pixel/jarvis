@@ -2,11 +2,11 @@ package com.etno2500pixel.jarvis
 
 import android.Manifest
 import android.os.Bundle
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
 import androidx.room.Room
 import com.etno2500pixel.jarvis.ai.RemoteAIProvider
 import com.etno2500pixel.jarvis.core.JarvisAgent
@@ -28,6 +28,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        hideSystemBars()
+
         val db = Room.databaseBuilder(applicationContext, JarvisDatabase::class.java, "jarvis.db").build()
         voice = VoiceManager(this)
         tools = AndroidTools(this)
@@ -45,6 +47,17 @@ class MainActivity : ComponentActivity() {
                     speech.launch(voice.recognitionIntent())
                 }
             )
+        }
+    }
+
+    private fun hideSystemBars() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.systemBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
         }
     }
 
