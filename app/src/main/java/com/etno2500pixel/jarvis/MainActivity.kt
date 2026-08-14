@@ -7,6 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.room.Room
 import com.etno2500pixel.jarvis.ai.RemoteAIProvider
 import com.etno2500pixel.jarvis.core.JarvisAgent
@@ -28,6 +31,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        hideSystemBars()
+
         val db = Room.databaseBuilder(applicationContext, JarvisDatabase::class.java, "jarvis.db").build()
         voice = VoiceManager(this)
         tools = AndroidTools(this)
@@ -48,6 +54,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
+    }
+
+    private fun hideSystemBars() {
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            hide(WindowInsetsCompat.Type.systemBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
     private fun handle(text: String, onResult: (String) -> Unit = {}) = MainScope().launch {
         val response = if (!tools.executeSafeCommand(text)) agent.respond(text) else "Erledigt."
         onResult(response)
@@ -55,7 +73,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        voice.release()
+        if (::voice.isInitialized) voice.release()
         super.onDestroy()
     }
 }
