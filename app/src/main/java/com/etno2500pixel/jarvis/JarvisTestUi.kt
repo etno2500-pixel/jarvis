@@ -16,14 +16,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
@@ -71,7 +72,7 @@ fun JarvisTestApp(
         keyboardMode = false
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
         val earthSize = maxWidth * 0.41f
         val earthTop = maxHeight * 0.325f - earthSize / 2f
 
@@ -81,7 +82,6 @@ fun JarvisTestApp(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Nur die Erde wird aus demselben HUD-Bild ausgeschnitten und um die Y-Achse gedreht.
         Box(
             Modifier
                 .size(earthSize)
@@ -97,25 +97,21 @@ fun JarvisTestApp(
                 val left = (hud.width * 0.295f).roundToInt()
                 val top = (hud.height * 0.12f).roundToInt()
                 val width = (hud.width * 0.41f).roundToInt()
-                val height = width
                 drawImage(
                     image = hud,
                     srcOffset = IntOffset(left, top),
-                    srcSize = IntSize(width, height),
+                    srcSize = IntSize(width, width),
                     dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt())
                 )
             }
         }
 
-        // Unsichtbare Funktionsflächen – das Abbild selbst bleibt unverändert.
         Box(
             Modifier
                 .align(Alignment.BottomStart)
                 .offset(x = maxWidth * 0.10f, y = -(maxHeight * 0.085f))
                 .size(maxWidth * 0.13f)
-                .clickable {
-                    keyboardMode = true
-                }
+                .clickable { keyboardMode = true }
         )
 
         Box(
@@ -147,7 +143,7 @@ fun JarvisTestApp(
                     .fillMaxWidth()
                     .height(92.dp)
                     .align(Alignment.BottomCenter)
-                    .background(androidx.compose.ui.graphics.Color(0xEE00040A))
+                    .background(Color(0xEE00040A))
             ) {
                 OutlinedTextField(
                     value = input,
@@ -156,7 +152,7 @@ fun JarvisTestApp(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .fillMaxWidth()
-                        .padding(horizontal = 70.dp),
+                        .padding(horizontal = 62.dp),
                     placeholder = { androidx.compose.material3.Text("Nachricht …") }
                 )
                 Icon(
@@ -164,7 +160,7 @@ fun JarvisTestApp(
                     contentDescription = "Senden",
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .offset(x = (-20).dp)
+                        .offset(x = (-18).dp)
                         .size(34.dp)
                         .clickable {
                             val text = input.trim()
