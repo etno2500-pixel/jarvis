@@ -161,7 +161,6 @@ fun JarvisTestApp(
                     }
                 }
 
-                // Exakt die im Prototyp hinterlegte Erde verwenden und nur um die Y-Achse drehen.
                 Box(
                     Modifier.fillMaxWidth().height(145.dp),
                     contentAlignment = Alignment.Center
@@ -172,7 +171,10 @@ fun JarvisTestApp(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .graphicsLayer { rotationY = rotation }
+                            .graphicsLayer {
+                                rotationY = rotation
+                                cameraDistance = 20f
+                            }
                     )
                 }
 
