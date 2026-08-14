@@ -1,1 +1,0 @@
-Startup fix branch: UI kept from f9a09f1. MainActivity startup initialization is moved out of the critical first-draw path.
