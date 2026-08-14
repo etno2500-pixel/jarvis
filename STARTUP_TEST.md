@@ -1,1 +1,0 @@
-Temporary startup verification marker.
